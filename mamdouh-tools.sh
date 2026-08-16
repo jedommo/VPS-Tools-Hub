@@ -1,7 +1,30 @@
 #!/usr/bin/env bash
 
-# MAMDOUH Server Toolkit
-# Run with: bash mamdouh-tools.sh
+# Define colors
+CYAN='\033[1;36m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+RED='\033[1;31m'
+BLUE='\033[1;34m'
+RESET='\033[0m'
+
+# Animated Loading Bar Function
+loading_animation() {
+    clear
+    echo -e "${YELLOW}🚀 Loading MAMDOUH Server Toolkit... ${RESET}\n"
+    for i in {1..25}; do
+        echo -ne "${GREEN}▓${RESET}"
+        sleep 0.02
+    done
+    echo -ne " ${CYAN}Ready!${RESET}\n\n"
+    sleep 0.4
+}
+
+# Run the animation only on startup
+if [ -z "$TOOLKIT_STARTED" ]; then
+    export TOOLKIT_STARTED=1
+    loading_animation
+fi
 
 clear
 
@@ -12,7 +35,7 @@ pause() {
 
 require_root() {
     if [ "$(id -u)" -ne 0 ]; then
-        echo "Please run this option as root or with sudo."
+        echo -e "${RED}❌ Please run this option as root or with sudo.${RESET}"
         pause
         return 1
     fi
@@ -35,69 +58,52 @@ confirm() {
 
 system_info() {
     clear
-    echo "=========================================="
-    echo "        MAMDOUH SERVER TOOLKIT"
-    echo "           SYSTEM INFORMATION"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          💻  ${GREEN}SYSTEM INFORMATION${RESET}     💻          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
-    echo
-    echo "Hostname: $(hostname)"
-    echo "Current User: $(whoami)"
+    echo -e "\n🏷️  ${YELLOW}Hostname:${RESET} $(hostname)"
+    echo -e "👤  ${YELLOW}Current User:${RESET} $(whoami)"
 
-    echo
-    echo "Operating System:"
+    echo -e "\n🐧  ${YELLOW}Operating System:${RESET}"
     if [ -f /etc/os-release ]; then
         . /etc/os-release
-        echo "${PRETTY_NAME:-Unknown}"
+        echo "    ${PRETTY_NAME:-Unknown}"
     fi
 
-    echo
-    echo "Kernel:"
-    uname -r
+    echo -e "\n🔧  ${YELLOW}Kernel:${RESET} $(uname -r)"
+    echo -e "🏗️  ${YELLOW}Architecture:${RESET} $(uname -m)"
+    echo -e "⏱️  ${YELLOW}Uptime:${RESET} $(uptime -p)"
 
-    echo
-    echo "Architecture:"
-    uname -m
-
-    echo
-    echo "Uptime:"
-    uptime -p
-
-    echo
-    echo "CPU:"
+    echo -e "\n⚡  ${YELLOW}CPU:${RESET}"
     if command -v lscpu >/dev/null 2>&1; then
-        lscpu | grep -E "Model name:|CPU\(s\):" | head -2
+        lscpu | grep -E "Model name:|CPU\(s\):" | head -2 | sed 's/^/    /'
     else
-        nproc
+        echo "    $(nproc)"
     fi
 
-    echo
-    echo "Memory:"
-    free -h
+    echo -e "\n🧠  ${YELLOW}Memory:${RESET}"
+    free -h | sed 's/^/    /'
 
-    echo
-    echo "Disk:"
-    df -h /
+    echo -e "\n💾  ${YELLOW}Disk:${RESET}"
+    df -h / | sed 's/^/    /'
 
     pause
 }
 
 disk_check() {
     clear
-    echo "=========================================="
-    echo "             DISK & STORAGE"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          💾  ${GREEN}DISK & STORAGE${RESET}         💾          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
-    echo
-    echo "--- Disk Usage ---"
+    echo -e "\n📂  ${YELLOW}--- Disk Usage ---${RESET}"
     df -h
 
-    echo
-    echo "--- Inode Usage ---"
+    echo -e "\n📊  ${YELLOW}--- Inode Usage ---${RESET}"
     df -i
 
-    echo
-    echo "--- Largest Directories in / ---"
+    echo -e "\n📦  ${YELLOW}--- Largest Directories in / ---${RESET}"
     du -xhd1 / 2>/dev/null | sort -h | tail -n 15
 
     pause
@@ -105,24 +111,20 @@ disk_check() {
 
 performance_check() {
     clear
-    echo "=========================================="
-    echo "           PERFORMANCE CHECK"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          ⚡  ${GREEN}PERFORMANCE CHECK${RESET}     ⚡          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
-    echo
-    echo "--- Uptime / Load ---"
+    echo -e "\n⏱️  ${YELLOW}--- Uptime / Load ---${RESET}"
     uptime
 
-    echo
-    echo "--- Memory ---"
+    echo -e "\n🧠  ${YELLOW}--- Memory ---${RESET}"
     free -h
 
-    echo
-    echo "--- Top CPU Processes ---"
+    echo -e "\n🔥  ${YELLOW}--- Top CPU Processes ---${RESET}"
     ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head -n 11
 
-    echo
-    echo "--- Top Memory Processes ---"
+    echo -e "\n💧  ${YELLOW}--- Top Memory Processes ---${RESET}"
     ps -eo pid,user,%mem,%cpu,comm --sort=-%mem | head -n 11
 
     pause
@@ -130,14 +132,14 @@ performance_check() {
 
 running_services() {
     clear
-    echo "=========================================="
-    echo "            RUNNING SERVICES"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          🟢  ${GREEN}RUNNING SERVICES${RESET}      🟢          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}\n"
 
     if command -v systemctl >/dev/null 2>&1; then
         systemctl list-units --type=service --state=running
     else
-        echo "systemctl is not available on this system."
+        echo -e "${RED}systemctl is not available on this system.${RESET}"
     fi
 
     pause
@@ -145,14 +147,14 @@ running_services() {
 
 failed_services() {
     clear
-    echo "=========================================="
-    echo "             FAILED SERVICES"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          ❌  ${RED}FAILED SERVICES${RESET}       ❌          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}\n"
 
     if command -v systemctl >/dev/null 2>&1; then
         systemctl --failed
     else
-        echo "systemctl is not available on this system."
+        echo -e "${RED}systemctl is not available on this system.${RESET}"
     fi
 
     pause
@@ -160,113 +162,98 @@ failed_services() {
 
 update_system() {
     clear
-    echo "=========================================="
-    echo "             SYSTEM UPDATE"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          🔄  ${GREEN}SYSTEM UPDATE${RESET}         🔄          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
     require_root || return
 
-    echo
-    echo "This will:"
+    echo -e "\nThis will:"
     echo "1) Update package lists"
     echo "2) Upgrade installed packages"
     echo
 
     if ! confirm "Continue with system update?"; then
-        echo "Cancelled."
+        echo -e "${YELLOW}Cancelled.${RESET}"
         pause
         return
     fi
 
-    echo
-    echo "[1/2] Updating package lists..."
+    echo -e "\n${BLUE}[1/2] Updating package lists...${RESET}"
     apt-get update
 
-    echo
-    echo "[2/2] Upgrading packages..."
+    echo -e "\n${BLUE}[2/2] Upgrading packages...${RESET}"
     apt-get upgrade -y
 
-    echo
-    echo "System update completed."
+    echo -e "\n${GREEN}✨ System update completed.${RESET}"
 
     pause
 }
 
 repair_system() {
     clear
-    echo "=========================================="
-    echo "         APT / PACKAGE REPAIR"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          🛠️  ${GREEN}APT / PACKAGE REPAIR${RESET}  🛠️          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
     require_root || return
 
-    echo
-    echo "This will try to:"
+    echo -e "\nThis will try to:"
     echo "1) Configure unfinished packages"
     echo "2) Fix broken dependencies"
     echo "3) Update package lists"
     echo
 
     if ! confirm "Continue with repair?"; then
-        echo "Cancelled."
+        echo -e "${YELLOW}Cancelled.${RESET}"
         pause
         return
     fi
 
-    echo
-    echo "[1/3] Configuring packages..."
+    echo -e "\n${BLUE}[1/3] Configuring packages...${RESET}"
     dpkg --configure -a
 
-    echo
-    echo "[2/3] Fixing broken dependencies..."
+    echo -e "\n${BLUE}[2/3] Fixing broken dependencies...${RESET}"
     apt-get install -f -y
 
-    echo
-    echo "[3/3] Updating package lists..."
+    echo -e "\n${BLUE}[3/3] Updating package lists...${RESET}"
     apt-get update
 
-    echo
-    echo "Repair process completed."
+    echo -e "\n${GREEN}✨ Repair process completed.${RESET}"
 
     pause
 }
 
 safe_cleanup() {
     clear
-    echo "=========================================="
-    echo "             SAFE CLEANUP"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          🧹  ${GREEN}SAFE SYSTEM CLEANUP${RESET}   🧹          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
     require_root || return
 
-    echo
-    echo "This will:"
+    echo -e "\nThis will:"
     echo "1) Clean APT cache"
     echo "2) Remove unused packages"
     echo "3) Remove temporary files older than 7 days"
-    echo
-    echo "Docker data will NOT be touched."
-    echo
+    echo -e "${YELLOW}Docker data will NOT be touched.${RESET}\n"
 
     if ! confirm "Continue with cleanup?"; then
-        echo "Cancelled."
+        echo -e "${YELLOW}Cancelled.${RESET}"
         pause
         return
     fi
 
-    echo
-    echo "[1/3] Cleaning APT cache..."
+    echo -e "\n${BLUE}[1/3] Cleaning APT cache...${RESET}"
     apt-get clean
 
-    echo "[2/3] Removing unused packages..."
+    echo -e "${BLUE}[2/3] Removing unused packages...${RESET}"
     apt-get autoremove -y
 
-    echo "[3/3] Cleaning old temporary files..."
+    echo -e "${BLUE}[3/3] Cleaning old temporary files...${RESET}"
     find /tmp -mindepth 1 -mtime +7 -delete 2>/dev/null || true
 
-    echo
-    echo "Cleanup completed."
-    echo
+    echo -e "\n${GREEN}✨ Cleanup completed.${RESET}\n"
     df -h /
 
     pause
@@ -274,94 +261,79 @@ safe_cleanup() {
 
 users_info() {
     clear
-    echo "=========================================="
-    echo "             USERS INFORMATION"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          👥  ${GREEN}USERS INFORMATION${RESET}     👥          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
-    echo
-    echo "Current user:"
-    whoami
+    echo -e "\n👤  ${YELLOW}Current user:${RESET} $(whoami)"
 
-    echo
-    echo "--- Local Users (UID >= 1000) ---"
-    awk -F: '$3 >= 1000 && $3 < 65534 {print $1 " (UID: " $3 ")"}' /etc/passwd
+    echo -e "\n📋  ${YELLOW}--- Local Users (UID >= 1000) ---${RESET}"
+    awk -F: '$3 >= 1000 && $3 < 65534 {print "    " $1 " (UID: " $3 ")"}' /etc/passwd
 
-    echo
-    echo "--- Users with sudo access ---"
+    echo -e "\n🛡️  ${YELLOW}--- Users with sudo access ---${RESET}"
     if getent group sudo >/dev/null 2>&1; then
         sudo_users=$(getent group sudo | cut -d: -f4)
         if [ -n "$sudo_users" ]; then
-            echo "$sudo_users" | tr ',' '\n'
+            echo "$sudo_users" | tr ',' '\n' | sed 's/^/    /'
         else
-            echo "No users listed in the sudo group."
+            echo "    No users listed in the sudo group."
         fi
     fi
 
-    echo
-    echo "--- Currently logged in ---"
-    who || true
+    echo -e "\n🟢  ${YELLOW}--- Currently logged in ---${RESET}"
+    who | sed 's/^/    /' || true
 
-    echo
-    echo "--- Recent logins ---"
-    last -n 10 2>/dev/null || true
+    echo -e "\n📜  ${YELLOW}--- Recent logins ---${RESET}"
+    last -n 10 2>/dev/null | sed 's/^/    /' || true
 
     pause
 }
 
 network_info() {
     clear
-    echo "=========================================="
-    echo "          NETWORK INFORMATION"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          🌐  ${GREEN}NETWORK INFORMATION${RESET}   🌐          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
-    echo
-    echo "--- Network Interfaces ---"
-    ip -brief address 2>/dev/null || true
+    echo -e "\n🔌  ${YELLOW}--- Network Interfaces ---${RESET}"
+    ip -brief address 2>/dev/null | sed 's/^/    /' || true
 
-    echo
-    echo "--- Default Route ---"
-    ip route 2>/dev/null | grep default || true
+    echo -e "\n🛤️  ${YELLOW}--- Default Route ---${RESET}"
+    ip route 2>/dev/null | grep default | sed 's/^/    /' || true
 
-    echo
-    echo "--- DNS ---"
+    echo -e "\n🔍  ${YELLOW}--- DNS ---${RESET}"
     if [ -f /etc/resolv.conf ]; then
-        grep -E "^nameserver" /etc/resolv.conf || true
+        grep -E "^nameserver" /etc/resolv.conf | sed 's/^/    /' || true
     fi
 
-    echo
-    echo "--- Listening Ports ---"
-    ss -tulpn 2>/dev/null || true
+    echo -e "\n📡  ${YELLOW}--- Listening Ports ---${RESET}"
+    ss -tulpn 2>/dev/null | sed 's/^/    /' || true
 
     pause
 }
 
 docker_info() {
     clear
-    echo "=========================================="
-    echo "            DOCKER INFORMATION"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          🐳  ${GREEN}DOCKER INFORMATION${RESET}    🐳          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
     if ! command -v docker >/dev/null 2>&1; then
-        echo
-        echo "Docker is not installed."
+        echo -e "\n${RED}Docker is not installed.${RESET}"
         pause
         return
     fi
 
-    echo
-    echo "--- Docker Version ---"
+    echo -e "\n🔖  ${YELLOW}--- Docker Version ---${RESET}"
     docker --version
 
-    echo
-    echo "--- Containers ---"
+    echo -e "\n📦  ${YELLOW}--- Containers ---${RESET}"
     docker ps -a
 
-    echo
-    echo "--- Docker Disk Usage ---"
+    echo -e "\n📊  ${YELLOW}--- Docker Disk Usage ---${RESET}"
     docker system df
 
-    echo
-    echo "--- Container Resource Usage ---"
+    echo -e "\n📈  ${YELLOW}--- Container Resource Usage ---${RESET}"
     docker stats --no-stream 2>/dev/null || true
 
     pause
@@ -369,14 +341,14 @@ docker_info() {
 
 restart_service() {
     clear
-    echo "=========================================="
-    echo "             RESTART SERVICE"
-    echo "=========================================="
+    echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}║${RESET}          🔄  ${GREEN}RESTART SERVICE${RESET}       🔄          ${CYAN}║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
     require_root || return
 
     if ! command -v systemctl >/dev/null 2>&1; then
-        echo "systemctl is not available."
+        echo -e "${RED}systemctl is not available.${RESET}"
         pause
         return
     fi
@@ -385,26 +357,24 @@ restart_service() {
     read -r -p "Enter service name (example: nginx): " service
 
     if [ -z "$service" ]; then
-        echo "No service entered."
+        echo -e "${RED}No service entered.${RESET}"
         pause
         return
     fi
 
-    echo
-    echo "Current status:"
+    echo -e "\n${YELLOW}Current status:${RESET}"
     systemctl status "$service" --no-pager 2>/dev/null || true
 
     echo
     if ! confirm "Restart $service?"; then
-        echo "Cancelled."
+        echo -e "${YELLOW}Cancelled.${RESET}"
         pause
         return
     fi
 
     systemctl restart "$service"
 
-    echo
-    echo "New status:"
+    echo -e "\n${GREEN}New status:${RESET}"
     systemctl status "$service" --no-pager 2>/dev/null || true
 
     pause
@@ -414,30 +384,30 @@ main_menu() {
     while true; do
         clear
 
-        echo "╔══════════════════════════════════════════╗"
-        echo "║          MAMDOUH SERVER TOOLKIT          ║"
-        echo "║       Maintenance & Management Tools     ║"
-        echo "╠══════════════════════════════════════════╣"
-        echo "║                                          ║"
-        echo "║  [1]  System Information                 ║"
-        echo "║  [2]  Disk & Storage Check               ║"
-        echo "║  [3]  Memory & CPU Check                 ║"
-        echo "║  [4]  Running Services                   ║"
-        echo "║  [5]  Failed Services                    ║"
-        echo "║  [6]  Update System                      ║"
-        echo "║  [7]  Fix APT / Broken Packages          ║"
-        echo "║  [8]  Safe System Cleanup                ║"
-        echo "║  [9]  User Information                   ║"
-        echo "║  [10] Network Information                ║"
-        echo "║  [11] Docker Information                 ║"
-        echo "║  [12] Restart a Service                  ║"
-        echo "║                                          ║"
-        echo "║  [0]  Exit                               ║"
-        echo "║                                          ║"
-        echo "╚══════════════════════════════════════════╝"
+        echo -e "${CYAN}╔══════════════════════════════════════════╗${RESET}"
+        echo -e "${CYAN}║${RESET}          🌟  ${GREEN}MAMDOUH SERVER TOOLKIT${RESET}  🌟          ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}       🛠️   Maintenance & Management   🛠️       ${CYAN}║${RESET}"
+        echo -e "${CYAN}╠══════════════════════════════════════════╣${RESET}"
+        echo -e "${CYAN}║${RESET}                                          ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[1]${RESET}  💻 System Information            ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[2]${RESET}  💾 Disk & Storage Check          ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[3]${RESET}  ⚡ Memory & CPU Check            ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[4]${RESET}  🟢 Running Services              ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[5]${RESET}  ❌ Failed Services               ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[6]${RESET}  🔄 Update System                 ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[7]${RESET}  🛠️ Fix APT / Broken Packages     ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[8]${RESET}  🧹 Safe System Cleanup           ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[9]${RESET}  👥 User Information              ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[10]${RESET} 🌐 Network Information          ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[11]${RESET} 🐳 Docker Information           ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${GREEN}[12]${RESET} 🔄 Restart a Service            ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}                                          ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}  ${RED}[0]${RESET}  🚪 Exit                          ${CYAN}║${RESET}"
+        echo -e "${CYAN}║${RESET}                                          ${CYAN}║${RESET}"
+        echo -e "${CYAN}╚══════════════════════════════════════════╝${RESET}"
 
         echo
-        read -r -p "Choose an option: " choice
+        read -r -p "👉 Choose an option: " choice
 
         case "$choice" in
             1) system_info ;;
@@ -454,12 +424,12 @@ main_menu() {
             12) restart_service ;;
             0)
                 echo
-                echo "Goodbye from MAMDOUH Server Toolkit!"
+                echo -e "${GREEN}👋 Goodbye from MAMDOUH Server Toolkit!${RESET}"
                 exit 0
                 ;;
             *)
                 echo
-                echo "Invalid option."
+                echo -e "${RED}❌ Invalid option. Please try again.${RESET}"
                 sleep 1
                 ;;
         esac
